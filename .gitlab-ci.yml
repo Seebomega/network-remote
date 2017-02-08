@@ -6,11 +6,11 @@ stages:
 - release
 
 variables:
-  CONTAINER_TEST_IMAGE: gitlab.onlineterroir.fr:5001/pitzzae/network-remote:$CI_BUILD_REF_NAME
-  CONTAINER_RELEASE_IMAGE: gitlab.onlineterroir.fr:5001/pitzzae/network-remote:latest
+  CONTAINER_TEST_IMAGE: gitlab.onlineterroir.com:5001/pitzzae/network-remote:$CI_BUILD_REF_NAME
+  CONTAINER_RELEASE_IMAGE: gitlab.onlineterroir.com:5001/pitzzae/network-remote:latest
 
 before_script:
-  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN gitlab.onlineterroir.fr:5001/pitzzae/network-remote
+  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN gitlab.onlineterroir.com:5001/pitzzae/network-remote
 
 release-image:
   stage: release

@@ -1,0 +1,19 @@
+{
+  "name": "network-remote",
+  "version": "0.0.0",
+  "description": "Network remote arp-scan",
+  "main": "app.js",
+  "dependencies": {
+    "socket.io-client": "^1.7.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.onlineterroir.com/pitzzae/network-remote.git"
+  },
+  "author": "gtorresa@student.42.fr",
+  "license": "ISC"
+}

@@ -1,9 +1,20 @@
+//******************************************************************************//
+//                                                                              //
+//                                                         :::      ::::::::    //
+//    app.js                                             :+:      :+:    :+:    //
+//                                                     +:+ +:+         +:+      //
+//    By: gtorresa <gtorresa@student.42.fr>          +#+  +:+       +#+         //
+//                                                 +#+#+#+#+#+   +#+            //
+//    Created: 2017/02/08 10:29:23 by gtorresa          #+#    #+#              //
+//    Updated: 2017/02/08 15:29:23 by gtorresa         ###   ########.fr        //
+//                                                                              //
+//******************************************************************************//
+
 var fs = require('fs');
 var io = require('socket.io-client');
 var exec = require('child_process').exec;
 var network = require('network');
 var Netmask = require('netmask').Netmask
-var dest_port = 443;
 
 var options = JSON.parse(fs.readFileSync('options.json') || '{}');
 
@@ -18,8 +29,8 @@ setTimeout(function(){
 		make_cmd_arp(scan_iface, send_data_to_engine);
 	}, 60000);
 }, 3000);
-
-var socket = io.connect(options.engine_ip, {port: dest_port, secure: true});
+console.log(options);
+var socket = io.connect(options.engine_ip, {port: options.dest_port, secure: false});
 
 socket.on('connect', function (data) {
 	console.log(data);

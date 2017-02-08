@@ -1,16 +1,31 @@
+var fs = require('fs');
 var io = require('socket.io-client');
 var exec = require('child_process').exec;
 var network = require('network');
 var Netmask = require('netmask').Netmask
 var dest_port = 443;
 
+var options = JSON.parse(fs.readFileSync('options.json') || '{}');
+
+var arp_table = {};
+arp_table.name = options.hostname;
+var scan_iface;
+arp_table.iface = [];
+
 setTimeout(function(){ 
 	start_app();
+	setInterval(function(){ 
+		make_cmd_arp(scan_iface, send_data_to_engine);
+	}, 60000);
 }, 3000);
 
-var socket = io.connect('http://127.0.0.1/', {port: dest_port, secure: true});
+var socket = io.connect(options.engine_ip, {port: dest_port, secure: true});
 
 socket.on('connect', function (data) {
+	console.log(data);
+});
+
+socket.on('disconnect', function (data) {
 	console.log(data);
 });
 
@@ -25,7 +40,8 @@ function start_app()
 		}
 		else
 		{
-			make_cmd_arp(obj)
+			scan_iface = obj;
+			make_cmd_arp(obj, send_data_to_engine)
 		}
 	});
 }
@@ -53,7 +69,7 @@ function convert_netmask(full_mask)
 	return (digit_mask);
 }
 
-function make_cmd_arp(net_list)
+function make_cmd_arp(net_list, callback)
 {
 	list_cmd = [];
 	for (var key in net_list)
@@ -72,24 +88,54 @@ function make_cmd_arp(net_list)
 
 		}
 	}
-	console.log(list_cmd);
-	for (var key in list_cmd)
-	{
-		var command = "sudo arp-scan -I " + list_cmd[key].iface + " " + list_cmd[key].base + "/" + list_cmd[key].di_sub + " 172.17.0.0/24";
-		console.log(command);
-		arp_network(command, console.log);
-	}
+	scan_arp_network(0, list_cmd, list_cmd.length - 1, callback);
 }
 
-function arp_network(command, callback)
+function scan_arp_network(pos, list_cmd, length, callback)
 {
+	var command = "sudo arp-scan -I " + list_cmd[pos].iface + " " + list_cmd[pos].base + "/" + list_cmd[pos].di_sub + " 172.17.0.1/32";
+	console.log(command);
 	exec(command, function(error_exec, stdout, stderr) {
 		if (error_exec) {
 			console.log("Error: ", error_exec);
 		}
 		else
 		{
-			callback(stdout);
+			var lines = stdout.split('\n');
+			var iface = lines[0].match(/Interface: [0-z,]+/g);
+			var len_line = 0;
+			var data = {};
+			data.host = [];
+			data.iface = iface[0].replace('Interface: ', '').replace(',', '');
+			lines.splice(0,2);
+			for (var key in lines)
+			{
+				if (lines[key] == "" && len_line == 0)
+					len_line = key;
+			}
+			lines.splice(len_line, lines.length);
+			for (var key in lines)
+			{
+				var host_inf = lines[key].split('\t');
+				data.host.push({ip: host_inf[0], mac: host_inf[1], vendor: host_inf[2]})
+			}
+			arp_table.iface.push(data);
+			if (pos >= length)
+			{
+				if (callback)
+					callback(arp_table);
+			}
+			else
+				scan_arp_network(pos + 1, list_cmd, length, callback)
 		}
 	});
+}
+
+function send_data_to_engine(data)
+{
+	
+	console.log(data);
+	socket.emit("scan_arp", data);
+	delete arp_table.iface;
+	arp_table.iface = [];
 }

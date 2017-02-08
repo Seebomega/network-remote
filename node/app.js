@@ -25,7 +25,6 @@ function start_app()
 		}
 		else
 		{
-			console.log(obj);
 			make_cmd_arp(obj)
 		}
 	});
@@ -40,7 +39,6 @@ function convert_digit(mask)
 		if (b2_mask[key] == 1)
 			res++;
 	}
-	console.log(b2_mask);
 	return (res);
 }
 
@@ -58,7 +56,7 @@ function convert_netmask(full_mask)
 function make_cmd_arp(net_list)
 {
 	list_cmd = [];
-	for (key in net_list)
+	for (var key in net_list)
 	{
 		if (net_list[key].ip_address && net_list[key].netmask)
 		{
@@ -71,12 +69,14 @@ function make_cmd_arp(net_list)
 				di_sub: di_sub,
 				base: block.base
 			});
+
 		}
 	}
-	for (key in list_cmd)
+	console.log(list_cmd);
+	for (var key in list_cmd)
 	{
 		var command = "sudo arp-scan -I " + list_cmd[key].iface + " " + list_cmd[key].base + "/" + list_cmd[key].di_sub + " 172.17.0.0/24";
-		console.log(list_cmd[key]);
+		console.log(command);
 		arp_network(command, console.log);
 	}
 }

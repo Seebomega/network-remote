@@ -4,6 +4,7 @@
   "description": "Network remote arp-scan",
   "main": "app.js",
   "dependencies": {
+    "netmask": "^1.0.6",
     "network": "^0.3.2",
     "socket.io-client": "^1.7.2"
   },

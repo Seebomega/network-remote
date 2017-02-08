@@ -1,6 +1,7 @@
 var io = require('socket.io-client');
 var exec = require('child_process').exec;
 var network = require('network');
+var Netmask = require('netmask').Netmask
 var dest_port = 443;
 
 setTimeout(function(){ 
@@ -51,7 +52,7 @@ function convert_netmask(full_mask)
 	{
 		digit_mask += convert_digit(parseInt(split_mask[key]));
 	}
-	console.log(digit_mask);
+	return (digit_mask);
 }
 
 function make_cmd_arp(net_list)
@@ -61,13 +62,21 @@ function make_cmd_arp(net_list)
 	{
 		if (net_list[key].ip_address && net_list[key].netmask)
 		{
-			list_cmd.push({iface: net_list[key].name, net: net_list[key].ip_address, sub: net_list[key].netmask});
+			var di_sub = convert_netmask(net_list[key].netmask);
+			var block = new Netmask(net_list[key].ip_address + '/' + di_sub);
+			list_cmd.push({
+				iface: net_list[key].name,
+				net: net_list[key].ip_address,
+				sub: net_list[key].netmask,
+				di_sub: di_sub,
+				base: block.base
+			});
 		}
 	}
-	convert_netmask("255.255.254.0");
 	for (key in list_cmd)
 	{
-		var command = "sudo arp-scan -I " + list_cmd[key].iface +" 172.17.0.0/24 192.168.80.0/24";
+		var command = "sudo arp-scan -I " + list_cmd[key].iface + " " + list_cmd[key].base + "/" + list_cmd[key].di_sub + " 172.17.0.0/24";
+		console.log(list_cmd[key]);
 		arp_network(command, console.log);
 	}
 }

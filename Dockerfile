@@ -7,7 +7,6 @@ RUN apt-get update && \
 	sudo \
 	npm \
 	nodejs \
-	net-tools \
 	arp-scan && \
 	apt-get clean
 

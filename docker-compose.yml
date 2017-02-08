@@ -2,12 +2,7 @@ version: "2"
 
 services:
   network-remote:
-#    image: gitlab.onlineterroir.com:5001/pitzzae/network-remote
-    image: network-remote
+    image: gitlab.onlineterroir.com:5001/pitzzae/network-remote
     container_name: network-remote
     restart: always
-    network_mode: bridge
-#networks:
-#  proxy-tier:
-#    external:
-#      name: proxy
+    network_mode: "host"

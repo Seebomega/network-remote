@@ -67,7 +67,7 @@ function make_cmd_arp(net_list)
 	convert_netmask("255.255.254.0");
 	for (key in list_cmd)
 	{
-		var command = "sudo arp-scan -I eth0 172.17.0.0/24";
+		var command = "sudo arp-scan -I " + list_cmd[key].iface +" 172.17.0.0/24 192.168.80.0/24";
 		arp_network(command, console.log);
 	}
 }

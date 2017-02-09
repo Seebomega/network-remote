@@ -32,14 +32,6 @@ setTimeout(function(){
 console.log(options);
 var socket = io.connect(options.engine_ip, {port: options.dest_port, secure: false});
 
-socket.on('connect', function (data) {
-	console.log(data);
-});
-
-socket.on('disconnect', function (data) {
-	console.log(data);
-});
-
 function start_app()
 {
 	network.get_interfaces_list(function(err, obj) {
@@ -88,6 +80,8 @@ function make_cmd_arp(net_list, callback)
 		if (net_list[key].ip_address && net_list[key].netmask)
 		{
 			var di_sub = convert_netmask(net_list[key].netmask);
+			if (di_sub  < 24)
+				di_sub = 24;
 			var block = new Netmask(net_list[key].ip_address + '/' + di_sub);
 			list_cmd.push({
 				iface: net_list[key].name,

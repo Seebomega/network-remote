@@ -137,7 +137,7 @@ function scan_arp_network(pos, list_cmd, length, callback)
 			if (pos >= length)
 			{
 				if (callback)
-					callback(arp_table);
+                    groupe_mac_on_ip(arp_table, callback);
 			}
 			else
 				scan_arp_network(pos + 1, list_cmd, length, callback)
@@ -145,10 +145,20 @@ function scan_arp_network(pos, list_cmd, length, callback)
 	});
 }
 
+function groupe_mac_on_ip(arp_table, callback)
+{
+	for(var key in arp_table.children)
+	{
+        for (var key1 in arp_table.children[key].children)
+		{
+            console.log(arp_table.children[key].children[key1]);
+		}
+	}
+    callback(arp_table);
+}
+
 function send_data_to_engine(data)
 {
-	
-	console.log(data);
 	socket.emit("scan_arp", data);
 	delete arp_table.children;
 	arp_table.children = [];

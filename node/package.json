@@ -9,7 +9,6 @@
     "network": "^0.3.2",
     "socket.io-client": "^1.7.2"
   },
-  "devDependencies": {},
   "scripts": {
     "start": "node app.js"
   },

@@ -14,7 +14,7 @@ var fs = require('fs');
 var io = require('socket.io-client');
 var exec = require('child_process').exec;
 var network = require('network');
-var Netmask = require('netmask').Netmask
+var Netmask = require('netmask').Netmask;
 
 var options = JSON.parse(fs.readFileSync('options.json') || '{}');
 
@@ -36,7 +36,7 @@ socket.on('connect', function () {
 	var arp_login = {
 		hostname: arp_table.name,
 		type: "arp_client"
-	}
+	};
     socket.emit("login", arp_login);
     console.log(arp_login);
 });
@@ -62,7 +62,7 @@ function convert_digit(mask)
 {
 	var res = 0;
 	var b2_mask = mask.toString(2);
-	for (key in b2_mask)
+	for (var key in b2_mask)
 	{
 		if (b2_mask[key] == 1)
 			res++;
@@ -74,7 +74,7 @@ function convert_netmask(full_mask)
 {
 	var split_mask = full_mask.split('.');
 	var digit_mask = 0;
-	for (key in split_mask)
+	for (var key in split_mask)
 	{
 		digit_mask += convert_digit(parseInt(split_mask[key]));
 	}
@@ -116,7 +116,7 @@ function scan_arp_network(pos, list_cmd, length, callback)
 		else
 		{
 			var lines = stdout.split('\n');
-			var iface = lines[0].match(/Interface: [0-z,]+/g);
+			var iface = lines[0].match(/Interface: [0-z.,]+/g);
 			var len_line = 0;
 			var data = {};
 			data.children = [];

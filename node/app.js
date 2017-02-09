@@ -21,16 +21,25 @@ var options = JSON.parse(fs.readFileSync('options.json') || '{}');
 var arp_table = {};
 arp_table.name = options.hostname;
 var scan_iface;
-arp_table.iface = [];
+arp_table.children = [];
 
 setTimeout(function(){ 
 	start_app();
 	setInterval(function(){ 
 		make_cmd_arp(scan_iface, send_data_to_engine);
-	}, 60000);
+	}, 20000);
 }, 3000);
 console.log(options);
 var socket = io.connect(options.engine_ip, {port: options.dest_port, secure: false});
+
+socket.on('connect', function () {
+	var arp_login = {
+		hostname: arp_table.name,
+		type: "arp_client"
+	}
+    socket.emit("login", arp_login);
+    console.log(arp_login);
+});
 
 function start_app()
 {
@@ -110,8 +119,8 @@ function scan_arp_network(pos, list_cmd, length, callback)
 			var iface = lines[0].match(/Interface: [0-z,]+/g);
 			var len_line = 0;
 			var data = {};
-			data.host = [];
-			data.iface = iface[0].replace('Interface: ', '').replace(',', '');
+			data.children = [];
+			data.name = iface[0].replace('Interface: ', '').replace(',', '');
 			lines.splice(0,2);
 			for (var key in lines)
 			{
@@ -122,9 +131,9 @@ function scan_arp_network(pos, list_cmd, length, callback)
 			for (var key in lines)
 			{
 				var host_inf = lines[key].split('\t');
-				data.host.push({ip: host_inf[0], mac: host_inf[1], vendor: host_inf[2]})
+				data.children.push({ip: host_inf[0], mac: host_inf[1], vendor: host_inf[2]})
 			}
-			arp_table.iface.push(data);
+			arp_table.children.push(data);
 			if (pos >= length)
 			{
 				if (callback)
@@ -141,6 +150,6 @@ function send_data_to_engine(data)
 	
 	console.log(data);
 	socket.emit("scan_arp", data);
-	delete arp_table.iface;
-	arp_table.iface = [];
+	delete arp_table.children;
+	arp_table.children = [];
 }

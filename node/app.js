@@ -131,7 +131,7 @@ function scan_arp_network(pos, list_cmd, length, callback)
 			for (var key in lines)
 			{
 				var host_inf = lines[key].split('\t');
-				data.children.push({ip: host_inf[0], mac: host_inf[1], vendor: host_inf[2], name: host_inf[0] + " " + host_inf[1] + " " + host_inf[2]})
+				data.children.push({ip: host_inf[0], mac: host_inf[1], vendor: host_inf[2]})
 			}
 			arp_table.children.push(data);
 			if (pos >= length)

@@ -37,8 +37,8 @@ socket.on('connect', function () {
 		hostname: arp_table.name,
 		type: "arp_client"
 	};
-    socket.emit("login", arp_login);
-    console.log(arp_login);
+	socket.emit("login", arp_login);
+	console.log(arp_login);
 });
 
 function start_app()
@@ -137,7 +137,7 @@ function scan_arp_network(pos, list_cmd, length, callback)
 			if (pos >= length)
 			{
 				if (callback)
-                    groupe_mac_on_ip(arp_table, callback);
+					groupe_mac_on_ip(arp_table, callback);
 			}
 			else
 				scan_arp_network(pos + 1, list_cmd, length, callback)
@@ -149,12 +149,53 @@ function groupe_mac_on_ip(arp_table, callback)
 {
 	for(var key in arp_table.children)
 	{
-        for (var key1 in arp_table.children[key].children)
+		var iface = {};
+		iface.name = arp_table.children[key].name;
+		iface.children = [];
+		for (var key1 in arp_table.children[key].children)
 		{
-            console.log(arp_table.children[key].children[key1]);
+			var mac_find = true;
+			for (var key2 in iface.children)
+			{
+				if (iface.children[key2].mac == arp_table.children[key].children[key1].mac)
+				{
+					mac_find = false;
+					iface.children[key2].mac.push(arp_table.children[key].children[key1].mac);
+				}
+			}
+			if (mac_find && arp_table.children[key].children[key1].ip != "172.17.0.1")
+			{
+				var new_host = {};
+				new_host.ip = arp_table.children[key].children[key1].ip;
+				new_host.name = arp_table.children[key].children[key1].ip
+				new_host.mac = [];
+				new_host.docker = false;
+				new_host.mac.push(arp_table.children[key].children[key1].mac);
+				iface.children.push(new_host);
+			}
 		}
+		for (var key1 in iface.children)
+		{
+			var counts = [];
+			var duplicated = false;
+			for(var i = 0; i <= iface.children[key1].mac.length; i++) {
+				if(counts[iface.children[key1].mac[i]] === undefined) {
+					counts[iface.children[key1].mac[i]] = 1;
+				} else {
+					duplicated = true;
+				}
+			}
+			if (duplicated)
+			{
+				iface.children[key1].docker = true;
+				iface.children[key1].mac = iface.children[key1].mac.filter(function(elem, index, self) {
+					return index == self.indexOf(elem);
+				});
+			}
+		}
+		arp_table.children[key].children = iface.children;
 	}
-    callback(arp_table);
+	callback(arp_table);
 }
 
 function send_data_to_engine(data)

@@ -176,7 +176,8 @@ function groupe_mac_on_ip(arp_table, callback)
 			var mac_find = true;
 			for (var key2 in iface.children)
 			{
-				if (iface.children[key2].mac == arp_table.children[key].children[key1].mac)
+				if (iface.children[key2].mac == arp_table.children[key].children[key1].mac ||
+					iface.children[key2].ip == arp_table.children[key].children[key1].ip)
 				{
 					mac_find = false;
 					iface.children[key2].mac.push(arp_table.children[key].children[key1].mac);
@@ -204,6 +205,8 @@ function groupe_mac_on_ip(arp_table, callback)
 					duplicated = true;
 				}
 			}
+			console.log(iface.children[key1].ip);
+			console.log(iface.children[key1].mac);
 			if (duplicated)
 			{
 				iface.children[key1].docker = true;

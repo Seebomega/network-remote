@@ -195,8 +195,43 @@ function groupe_mac_on_ip(arp_table, callback)
 		}
 		arp_table.children[key].children = iface.children;
 	}
-	callback(arp_table);
+	
+	get_host_name(0, 0, arp_table, callback);
 }
+
+function get_host_name(p_iface, p_host, arp_table, callback)
+{
+	if (arp_table.children[p_iface].children[p_host])
+	{
+		var command = "host " + arp_table.children[p_iface].children[p_host].ip;
+		console.log(command);
+		exec(command, function(error_exec, stdout, stderr) {
+			var tab_dns_name = stdout.match(/domain name pointer ([0-z.])+/g);
+			var dns_name;
+			if (tab_dns_name && tab_dns_name[0])
+			{
+				dns_name = tab_dns_name[0].replace("domain name pointer ", "");
+				arp_table.children[p_iface].children[p_host].name = dns_name;
+			}
+			console.log(dns_name);
+			p_host++;
+			if (arp_table.children[p_iface].children[p_host])
+			{
+				get_host_name(p_iface, p_host, arp_table, callback)
+			}
+			else
+			{
+				p_host = 0;
+				p_iface++;
+				if (arp_table.children[p_iface] && arp_table.children[p_iface].children[p_host])
+					get_host_name(p_iface, p_host, arp_table, callback)
+				else
+					callback(arp_table);
+			}
+		});
+	}
+}
+
 
 function send_data_to_engine(data)
 {

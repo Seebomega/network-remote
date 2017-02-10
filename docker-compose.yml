@@ -9,3 +9,6 @@ services:
     network_mode: "host"
     volumes:
       - "./node/options.json:/data/remote/options.json"
+    dns:
+      - 10.2.1.244
+      - 10.2.1.239

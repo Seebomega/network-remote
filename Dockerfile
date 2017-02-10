@@ -8,6 +8,7 @@ RUN apt-get update && \
 	npm \
 	nodejs \
 	net-tools \
+	dnsutils \
 	arp-scan && \
 	apt-get clean
 

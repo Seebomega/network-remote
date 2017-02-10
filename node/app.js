@@ -44,7 +44,7 @@ socket.on('connect', function () {
 socket.on('return_register', function (token) {
 	if (token.valid)
 	{
-		options.token = token.valid;
+		options.token = token.id;
 		fs.writeFileSync('options.json', JSON.stringify(options));
 		console.log("Registered on engine");
 	}

@@ -19,7 +19,7 @@ RUN echo "remote ALL= NOPASSWD: /usr/bin/arp-scan" | cat >> /etc/sudoers
 
 RUN echo "remote ALL= NOPASSWD: /sbin/ip" | cat >> /etc/sudoers
 
-RUN ln -s /usr/bin/nodejs /usr/bin/node
+RUN ln -s /usr/bin/nodejs /usr/bin/node && ln -s /data/remote/register /usr/bin/register
 
 ADD ./node /data/remote
 

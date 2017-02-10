@@ -29,17 +29,37 @@ setTimeout(function(){
 		make_cmd_arp(scan_iface, send_data_to_engine);
 	}, 20000);
 }, 3000);
-console.log(options);
+
 var socket = io.connect(options.engine_ip, {port: options.dest_port, secure: false});
 
 socket.on('connect', function () {
 	var arp_login = {
 		hostname: arp_table.name,
-		type: "arp_client"
+		type: "arp_client",
+		token: options.token
 	};
 	socket.emit("login", arp_login);
-	console.log(arp_login);
 });
+
+socket.on('return_register', function (token) {
+	if (token.valid)
+	{
+		options.token = token.valid;
+		fs.writeFileSync('options.json', JSON.stringify(options));
+		console.log("Registered on engine");
+	}
+	else
+	{
+		console.log("Wrong token");
+	}
+	process.exit(0);
+});
+
+if (process.argv.length >= 4 && process.argv[2] == "register")
+{
+	socket.emit("register_scan_arp", process.argv[3]);
+	console.log("Register on engine");
+}
 
 function start_app()
 {
@@ -108,7 +128,6 @@ function make_cmd_arp(net_list, callback)
 function scan_arp_network(pos, list_cmd, length, callback)
 {
 	var command = "sudo arp-scan -I " + list_cmd[pos].iface + " " + list_cmd[pos].base + "/" + list_cmd[pos].di_sub + " 172.17.0.1/32";
-	console.log(command);
 	exec(command, function(error_exec, stdout, stderr) {
 		if (error_exec) {
 			console.log("Error: ", error_exec);
@@ -204,16 +223,14 @@ function get_host_name(p_iface, p_host, arp_table, callback)
 	if (arp_table.children[p_iface].children[p_host])
 	{
 		var command = "host " + arp_table.children[p_iface].children[p_host].ip;
-		console.log(command);
 		exec(command, function(error_exec, stdout, stderr) {
-			var tab_dns_name = stdout.match(/domain name pointer ([0-z.])+/g);
+			var tab_dns_name = stdout.match(/domain name pointer ([0-z.-])+/g);
 			var dns_name;
 			if (tab_dns_name && tab_dns_name[0])
 			{
 				dns_name = tab_dns_name[0].replace("domain name pointer ", "");
 				arp_table.children[p_iface].children[p_host].name = dns_name;
 			}
-			console.log(dns_name);
 			p_host++;
 			if (arp_table.children[p_iface].children[p_host])
 			{

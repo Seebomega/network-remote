@@ -1,0 +1,6 @@
+#!/bin/sh
+if [ -n "$1" ]; then
+  node /data/remote/app.js register $1
+else
+  echo "Undefined token"
+fi

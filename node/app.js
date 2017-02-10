@@ -205,8 +205,6 @@ function groupe_mac_on_ip(arp_table, callback)
 					duplicated = true;
 				}
 			}
-			console.log(iface.children[key1].ip);
-			console.log(iface.children[key1].mac);
 			if (duplicated)
 			{
 				iface.children[key1].docker = true;

@@ -276,7 +276,7 @@ function get_dhcp_lease() {
     for (var key in dhcp_lease_list)
 	{
         var result = dhcp_lease_list[key].match(/lease ([0-9.]+) |client-hostname "([A-z- 0-9]+)";/g);
-		dhcp_lease[result[0].replace("lease ", "")] = result[1].replace("client-hostname \"", "").replace("\";", "");
+		dhcp_lease[result[0].replace("lease ", "").replace(" ", "")] = result[1].replace("client-hostname \"", "").replace("\";", "");
 	}
     return (dhcp_lease);
 }

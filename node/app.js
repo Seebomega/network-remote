@@ -313,17 +313,18 @@ function get_host_name(p_iface, p_host, arp_table, dhcp_lease, scan_date, callba
                 {
                     var netbios_name = netbios_name_list[1].split(" ").join("").split("<");
                     arp_table.children[p_iface].children[p_host].netbios = netbios_name[0].substr(1, netbios_name[0].length);
-                    arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].netbios;
+                    arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].netbios + "";
                 }
                 if (dhcp_lease[arp_table.children[p_iface].children[p_host].ip])
 				{
                     arp_table.children[p_iface].children[p_host].hostname = dhcp_lease[arp_table.children[p_iface].children[p_host].ip];
-                    arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].hostname;
+                    arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].hostname + "";
+                    console.log(arp_table.children[p_iface].children[p_host].hostname, arp_table.children[p_iface].children[p_host].ip);
 				}
                 if (tab_dns_name && tab_dns_name[0])
 				{
                     arp_table.children[p_iface].children[p_host].dns_name = tab_dns_name[0].replace("domain name pointer ", "");
-					arp_table.children[p_iface].children[p_host].name = dns_name;
+					arp_table.children[p_iface].children[p_host].name = dns_name + "";
 				}
 				p_host++;
 				if (arp_table.children[p_iface].children[p_host])

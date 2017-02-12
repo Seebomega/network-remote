@@ -276,26 +276,40 @@ function get_host_name(p_iface, p_host, arp_table, callback)
 		var command = "host " + arp_table.children[p_iface].children[p_host].ip;
 		exec(command, function(error_exec, stdout, stderr) {
 			var tab_dns_name = stdout.match(/domain name pointer ([0-z.-])+/g);
-			var dns_name;
-			if (tab_dns_name && tab_dns_name[0])
-			{
-				dns_name = tab_dns_name[0].replace("domain name pointer ", "");
-				arp_table.children[p_iface].children[p_host].name = dns_name;
-			}
-			p_host++;
-			if (arp_table.children[p_iface].children[p_host])
-			{
-				get_host_name(p_iface, p_host, arp_table, callback)
-			}
-			else
-			{
-				p_host = 0;
-				p_iface++;
-				if (arp_table.children[p_iface] && arp_table.children[p_iface].children[p_host])
+            command = "timeout 0.1 nmblookup -A " + arp_table.children[p_iface].children[p_host].ip;
+            exec(command, function(error_exec1, stdout1, stderr1) {
+                var netbios_name_list = stdout1.split("\n");
+                var netbios_name;
+                var dns_name;
+                if (netbios_name_list && netbios_name_list[1])
+                {
+                    netbios_name = netbios_name_list[1].split(" ").join("").split("<");
+                    arp_table.children[p_iface].children[p_host].netbios = netbios_name[0].substr(1, netbios_name[0].length);
+                    arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].netbios;
+                }
+                if (tab_dns_name && tab_dns_name[0])
+				{
+					dns_name = tab_dns_name[0].replace("domain name pointer ", "");
+					if (arp_table.children[p_iface].children[p_host].netbios)
+						arp_table.children[p_iface].children[p_host].name += " " + dns_name;
+					else
+                        arp_table.children[p_iface].children[p_host].name = dns_name;
+				}
+				p_host++;
+				if (arp_table.children[p_iface].children[p_host])
+				{
 					get_host_name(p_iface, p_host, arp_table, callback)
+				}
 				else
-					callback(arp_table);
-			}
+				{
+					p_host = 0;
+					p_iface++;
+					if (arp_table.children[p_iface] && arp_table.children[p_iface].children[p_host])
+						get_host_name(p_iface, p_host, arp_table, callback);
+					else
+						callback(arp_table);
+				}
+            });
 		});
 	}
 }

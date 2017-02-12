@@ -9,6 +9,7 @@ RUN apt-get update && \
 	nodejs \
 	net-tools \
 	dnsutils \
+	samba-common-bin \
 	arp-scan && \
 	apt-get clean
 

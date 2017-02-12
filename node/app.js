@@ -300,7 +300,7 @@ function get_host_name(p_iface, p_host, arp_table, dhcp_lease, callback)
                 if (dhcp_lease[arp_table.children[p_iface].children[p_host].ip])
 				{
                     arp_table.children[p_iface].children[p_host].hostname = dhcp_lease[arp_table.children[p_iface].children[p_host].ip];
-                    arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].netbios;
+                    arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].hostname;
 				}
                 if (tab_dns_name && tab_dns_name[0])
 				{

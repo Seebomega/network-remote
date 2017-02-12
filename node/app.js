@@ -34,6 +34,22 @@ setTimeout(function(){
 	}, 20000);
 }, 3000);
 
+function twoDigits(d) {
+    if(0 <= d && d < 10) return "0" + d.toString();
+    if(-10 < d && d < 0) return "-0" + (-1*d).toString();
+    return d.toString();
+}
+
+function toMysqlFormat(date) {
+    if(date != null){
+        return date.getUTCFullYear() + "-" + twoDigits(1 + date.getUTCMonth()) + "-" + twoDigits(date.getUTCDate()) + " " + twoDigits(date.getHours()) + ":" + twoDigits(date.getUTCMinutes()) + ":" + twoDigits(date.getUTCSeconds());
+    }
+    else{
+        return '';
+    }
+};
+
+
 function shutdown(signal, value) {
 	console.log('server stopped by ' + signal);
 	console.log('clean cookie: ' + token);
@@ -266,7 +282,8 @@ function groupe_mac_on_ip(arp_table, callback)
 		arp_table.children[key].children = iface.children;
 	}
     var dhcp_lease = get_dhcp_lease();
-	get_host_name(0, 0, arp_table, dhcp_lease, callback);
+	var scan_date = toMysqlFormat(new Date());
+	get_host_name(0, 0, arp_table, dhcp_lease, scan_date, callback);
 }
 
 function get_dhcp_lease() {
@@ -281,11 +298,12 @@ function get_dhcp_lease() {
     return (dhcp_lease);
 }
 
-function get_host_name(p_iface, p_host, arp_table, dhcp_lease, callback)
+function get_host_name(p_iface, p_host, arp_table, dhcp_lease, scan_date, callback)
 {
 	if (arp_table.children[p_iface].children[p_host])
 	{
 		var command = "host " + arp_table.children[p_iface].children[p_host].ip;
+        arp_table.children[p_iface].children[p_host].date = scan_date;
 		exec(command, function(error_exec, stdout, stderr) {
 			var tab_dns_name = stdout.match(/domain name pointer ([0-z.-])+/g);
             command = "timeout 0.1 nmblookup -A " + arp_table.children[p_iface].children[p_host].ip;
@@ -310,14 +328,14 @@ function get_host_name(p_iface, p_host, arp_table, dhcp_lease, callback)
 				p_host++;
 				if (arp_table.children[p_iface].children[p_host])
 				{
-					get_host_name(p_iface, p_host, arp_table, dhcp_lease, callback)
+					get_host_name(p_iface, p_host, arp_table, dhcp_lease, scan_date, callback)
 				}
 				else
 				{
 					p_host = 0;
 					p_iface++;
 					if (arp_table.children[p_iface] && arp_table.children[p_iface].children[p_host])
-						get_host_name(p_iface, p_host, arp_table, dhcp_lease, callback);
+						get_host_name(p_iface, p_host, arp_table, dhcp_lease, scan_date, callback);
 					else
 						callback(arp_table);
 				}

@@ -100,7 +100,7 @@ function init_socket_io(token) {
         {
             console.log("Wrong token");
         }
-        process.exit(0);
+        shutdown('SIGTERM', -128);
     });
 
     if (process.argv.length >= 4 && process.argv[2] == "register")

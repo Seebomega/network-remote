@@ -1,0 +1,58 @@
+lease 192.168.80.100 {
+  starts 6 2017/01/14 20:46:35;
+  ends 6 2017/01/14 20:48:35;
+  tstp 6 2017/01/14 20:48:35;
+  cltt 6 2017/01/14 20:46:35;
+  binding state free;
+  hardware ethernet 9c:5c:f9:86:11:b3;
+  uid "\001\234\\\371\206\021\263";
+  set vendor-class-identifier = "android-dhcp-6.0";
+  client-hostname "android-3dac9d55241412ae";
+}
+lease 192.168.80.91 {
+  starts 6 2017/01/14 20:46:35;
+  ends 6 2017/01/14 20:56:35;
+  tstp 6 2017/01/14 20:56:35;
+  cltt 6 2017/01/14 20:46:35;
+  binding state free;
+  hardware ethernet 9c:5c:f9:86:11:b3;
+  uid "\001\234\\\371\206\021\263";
+  set vendor-class-identifier = "android-dhcp-6.0";
+}
+lease 192.168.80.42 {
+  starts 6 2017/02/04 11:02:42;
+  ends 6 2017/02/04 11:12:42;
+  tstp 6 2017/02/04 11:12:42;
+  cltt 6 2017/02/04 11:02:42;
+  binding state free;
+  hardware ethernet 52:54:00:57:ad:56;
+  uid "\001RT\000W\255V";
+  set vendor-class-identifier = "MSFT 5.0";
+}
+lease 192.168.80.89 {
+  starts 4 2017/02/09 00:19:40;
+  ends 4 2017/02/09 00:29:40;
+  tstp 4 2017/02/09 00:29:40;
+  cltt 4 2017/02/09 00:19:40;
+  binding state free;
+  hardware ethernet 28:18:78:cb:dc:97;
+}
+lease 192.168.80.82 {
+  starts 6 2017/02/11 01:21:32;
+  ends 6 2017/02/11 01:31:32;
+  tstp 6 2017/02/11 01:31:32;
+  cltt 6 2017/02/11 01:21:32;
+  binding state free;
+  hardware ethernet 40:49:0f:fe:c7:8d;
+}
+lease 192.168.80.60 {
+  starts 0 2017/02/12 17:27:10;
+  ends 0 2017/02/12 19:27:10;
+  cltt 0 2017/02/12 17:27:10;
+  binding state active;
+  next binding state free;
+  rewind binding state free;
+  hardware ethernet cc:20:e8:3f:7a:05;
+  uid "\001\314 \350?z\005";
+  client-hostname "iPhonedillaume3";
+}

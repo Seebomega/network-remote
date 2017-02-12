@@ -265,11 +265,23 @@ function groupe_mac_on_ip(arp_table, callback)
 		}
 		arp_table.children[key].children = iface.children;
 	}
-	
-	get_host_name(0, 0, arp_table, callback);
+    var dhcp_lease = get_dhcp_lease();
+	get_host_name(0, 0, arp_table, dhcp_lease, callback);
 }
 
-function get_host_name(p_iface, p_host, arp_table, callback)
+function get_dhcp_lease() {
+    var dhcp_file = fs.readFileSync('dhcpd.leases', 'utf8');
+    var dhcp_lease_list = dhcp_file.match(/lease ([0-9.]+) {([A-z 0-9/:;.\n"\\'{?=-]+);\n  client-hostname "([A-z- 0-9]+)";\n}/g);
+    var dhcp_lease = {};
+    for (var key in dhcp_lease_list)
+	{
+        var result = dhcp_lease_list[key].match(/lease ([0-9.]+) |client-hostname "([A-z- 0-9]+)";/g);
+		dhcp_lease[result[0].replace("lease ", "")] = result[1].replace("client-hostname \"", "").replace("\";", "");
+	}
+    return (dhcp_lease);
+}
+
+function get_host_name(p_iface, p_host, arp_table, dhcp_lease, callback)
 {
 	if (arp_table.children[p_iface].children[p_host])
 	{
@@ -279,34 +291,33 @@ function get_host_name(p_iface, p_host, arp_table, callback)
             command = "timeout 0.1 nmblookup -A " + arp_table.children[p_iface].children[p_host].ip;
             exec(command, function(error_exec1, stdout1, stderr1) {
                 var netbios_name_list = stdout1.split("\n");
-                var netbios_name;
-                var dns_name;
                 if (netbios_name_list && netbios_name_list[1])
                 {
-                    netbios_name = netbios_name_list[1].split(" ").join("").split("<");
+                    var netbios_name = netbios_name_list[1].split(" ").join("").split("<");
                     arp_table.children[p_iface].children[p_host].netbios = netbios_name[0].substr(1, netbios_name[0].length);
-                    arp_table.children[p_iface].children[p_host].netbios += "\n" + arp_table.children[p_iface].children[p_host].ip;
                     arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].netbios;
                 }
+                if (dhcp_lease[arp_table.children[p_iface].children[p_host].ip])
+				{
+                    arp_table.children[p_iface].children[p_host].hostname = dhcp_lease[arp_table.children[p_iface].children[p_host].ip];
+                    arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].netbios;
+				}
                 if (tab_dns_name && tab_dns_name[0])
 				{
-					dns_name = tab_dns_name[0].replace("domain name pointer ", "");
-					if (arp_table.children[p_iface].children[p_host].netbios)
-						arp_table.children[p_iface].children[p_host].name += "\n" + dns_name;
-					else
-                        arp_table.children[p_iface].children[p_host].name = dns_name;
+                    arp_table.children[p_iface].children[p_host].dns_name = tab_dns_name[0].replace("domain name pointer ", "");
+					arp_table.children[p_iface].children[p_host].name = dns_name;
 				}
 				p_host++;
 				if (arp_table.children[p_iface].children[p_host])
 				{
-					get_host_name(p_iface, p_host, arp_table, callback)
+					get_host_name(p_iface, p_host, arp_table, dhcp_lease, callback)
 				}
 				else
 				{
 					p_host = 0;
 					p_iface++;
 					if (arp_table.children[p_iface] && arp_table.children[p_iface].children[p_host])
-						get_host_name(p_iface, p_host, arp_table, callback);
+						get_host_name(p_iface, p_host, arp_table, dhcp_lease, callback);
 					else
 						callback(arp_table);
 				}

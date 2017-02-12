@@ -285,7 +285,7 @@ function get_host_name(p_iface, p_host, arp_table, callback)
                 {
                     netbios_name = netbios_name_list[1].split(" ").join("").split("<");
                     arp_table.children[p_iface].children[p_host].netbios = netbios_name[0].substr(1, netbios_name[0].length);
-                    arp_table.children[p_iface].children[p_host].netbios += " " + arp_table.children[p_iface].children[p_host].ip;
+                    arp_table.children[p_iface].children[p_host].netbios += "\n" + arp_table.children[p_iface].children[p_host].ip;
                     arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].netbios;
                 }
                 if (tab_dns_name && tab_dns_name[0])

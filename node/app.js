@@ -12,6 +12,7 @@
 
 var fs = require('fs');
 var io = require('socket.io-client');
+var crypto = require('crypto');
 var exec = require('child_process').exec;
 var network = require('network');
 var Netmask = require('netmask').Netmask;
@@ -25,40 +26,69 @@ arp_table.children = [];
 
 setTimeout(function(){ 
 	start_app();
+
 	setInterval(function(){ 
 		make_cmd_arp(scan_iface, send_data_to_engine);
+		console.log("scan_iface");
 	}, 20000);
 }, 3000);
 
-var socket = io.connect(options.engine_ip, {port: options.dest_port, secure: false});
+var socket;
 
-socket.on('connect', function () {
-	var arp_login = {
-		hostname: arp_table.name,
-		type: "arp_client",
-		token: options.token
-	};
-	socket.emit("login", arp_login);
+crypto.randomBytes(48, function(ex, buf) {
+    var token = buf.toString('hex');
+    fs.writeFileSync(
+        "/data/remote/cookies/" + token,
+        JSON.stringify({
+            user: options.hostname,
+			type: "network-remote",
+            login : new Date()
+        })
+    );
+    init_socket_io(token);
 });
 
-socket.on('return_register', function (token) {
-	if (token.valid)
-	{
-		options.token = token.id;
-		fs.writeFileSync('options.json', JSON.stringify(options));
-		console.log("Registered on engine");
-	}
-	else
-	{
-		console.log("Wrong token");
-	}
-	process.exit(0);
-});
+function init_socket_io(token) {
 
-if (process.argv.length >= 4 && process.argv[2] == "register")
-{
-	socket.emit("register_scan_arp", process.argv[3]);
-	console.log("Register on engine");
+    socket = io.connect(options.engine_ip, {
+        'port': options.dest_port,
+        'secure': true,
+        extraHeaders: {
+            'Cookie': "AUTH_COOKIE=" + token + ";"
+        }
+    });
+
+	console.log("io connect " + options.engine_ip + " port " + options.dest_port);
+
+    socket.on('connect', function () {
+        var arp_login = {
+            hostname: arp_table.name,
+            type: "arp_client",
+            token: options.token
+        };
+        socket.emit("login", arp_login);
+        console.log("Login: ", arp_login);
+    });
+
+    socket.on('return_register', function (token) {
+        if (token.valid)
+        {
+            options.token = token.id;
+            fs.writeFileSync('options.json', JSON.stringify(options));
+            console.log("Registered on engine");
+        }
+        else
+        {
+            console.log("Wrong token");
+        }
+        process.exit(0);
+    });
+
+    if (process.argv.length >= 4 && process.argv[2] == "register")
+    {
+        socket.emit("register_scan_arp", process.argv[3]);
+        console.log("Register on engine");
+    }
 }
 
 function start_app()
@@ -128,6 +158,7 @@ function make_cmd_arp(net_list, callback)
 function scan_arp_network(pos, list_cmd, length, callback)
 {
 	var command = "sudo arp-scan -I " + list_cmd[pos].iface + " " + list_cmd[pos].base + "/" + list_cmd[pos].di_sub + " 172.17.0.1/32";
+	console.log(command);
 	exec(command, function(error_exec, stdout, stderr) {
 		if (error_exec) {
 			console.log("Error: ", error_exec);
@@ -254,6 +285,7 @@ function get_host_name(p_iface, p_host, arp_table, callback)
 function send_data_to_engine(data)
 {
 	socket.emit("scan_arp", data);
+	console.log("Send arp_data");
 	delete arp_table.children;
 	arp_table.children = [];
 }

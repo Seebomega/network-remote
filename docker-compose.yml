@@ -9,6 +9,4 @@ services:
     network_mode: "host"
     volumes:
       - "./node/options.json:/data/remote/options.json"
-    dns:
-      - 10.2.1.244
-      - 10.2.1.239
+      - "/nfs/docker/nginx-proxy/nginx/cookies:/data/remote/cookies:rw"

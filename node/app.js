@@ -22,6 +22,7 @@ var options = JSON.parse(fs.readFileSync('options.json') || '{}');
 var arp_table = {};
 arp_table.name = options.hostname;
 var scan_iface;
+var token;
 arp_table.children = [];
 
 setTimeout(function(){ 
@@ -33,10 +34,28 @@ setTimeout(function(){
 	}, 20000);
 }, 3000);
 
+function shutdown(signal, value) {
+	console.log('server stopped by ' + signal);
+	console.log('clean cookie: ' + token);
+	fs.unlinkSync("/data/remote/cookies/" + token);
+	process.exit(128 + value);
+}
+
+var signals = {
+    'SIGINT': 2,
+    'SIGTERM': 15
+};
+
+Object.keys(signals).forEach(function (signal) {
+    process.on(signal, function () {
+        shutdown(signal, signals[signal]);
+    });
+});
+
 var socket;
 
 crypto.randomBytes(48, function(ex, buf) {
-    var token = buf.toString('hex');
+    token = buf.toString('hex');
     fs.writeFileSync(
         "/data/remote/cookies/" + token,
         JSON.stringify({

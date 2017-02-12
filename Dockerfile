@@ -31,4 +31,4 @@ WORKDIR /data/remote
 
 RUN npm install .
 
-CMD /usr/bin/npm start
+ENTRYPOINT ["node", "app.js"]

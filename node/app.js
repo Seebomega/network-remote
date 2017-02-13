@@ -388,12 +388,6 @@ function get_host_name(p_iface, p_host, arp_table, dhcp_lease, scan_date, callba
 					arp_table.children[p_iface].children[p_host].dns_name = tab_dns_name[0].replace("domain name pointer ", "");
 					arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].dns_name + "";
 				}
-				/*console.log(
-					arp_table.children[p_iface].children[p_host].ip,
-					arp_table.children[p_iface].children[p_host].dns_name,
-					arp_table.children[p_iface].children[p_host].hostname,
-					arp_table.children[p_iface].children[p_host].netbios);
-				*/
 				p_host++;
 				if (arp_table.children[p_iface].children[p_host])
 				{
@@ -418,6 +412,21 @@ function send_data_to_engine(data)
 {
 	scan_date.end = new Date().getTime() / 1000;
 	data.time = toHHMMSS(scan_date.end - scan_date.start);
+	for (var key in data.children)
+	{
+		for (var key1 in scan_iface)
+		{
+			if (data.children[key].name == scan_iface[key1].name)
+			{
+				console.log(scan_iface[key1]);
+				data.children[key].type = scan_iface[key1].type;
+				data.children[key].ip_address = scan_iface[key1].ip_address;
+				data.children[key].gateway_ip = scan_iface[key1].gateway_ip;
+				data.children[key].netmask = scan_iface[key1].netmask;
+			}
+		}
+		console.log(data.children[key].name);
+	}
 	socket.emit("scan_arp", data);
 	console.log("Send arp_data");
 	delete arp_table.children;

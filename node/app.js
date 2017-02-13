@@ -9,7 +9,7 @@
 //    Updated: 2017/02/08 15:29:23 by gtorresa         ###   ########.fr        //
 //                                                                              //
 //******************************************************************************//
-
+//egrep "host|hardware ethernet|fixed-address|    \}" /etc/dhcp/dhcpd.conf | sed '/^#/ d' | sed 's/\<host\>//g' | tr -d " "
 var fs = require('fs');
 var io = require('socket.io-client');
 var crypto = require('crypto');

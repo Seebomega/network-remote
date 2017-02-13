@@ -368,7 +368,7 @@ function get_host_name(p_iface, p_host, arp_table, dhcp_lease, scan_date, callba
 		arp_table.children[p_iface].children[p_host].date = scan_date;
 		exec(command, function(error_exec, stdout, stderr) {
 			var tab_dns_name = stdout.match(/domain name pointer ([0-z.-])+/g);
-			command = "timeout 0.1 nmblookup -A " + arp_table.children[p_iface].children[p_host].ip;
+			command = "timeout 0.3 nmblookup -A " + arp_table.children[p_iface].children[p_host].ip;
 			exec(command, function(error_exec1, stdout1, stderr1) {
 				var netbios_name_list = stdout1.split("\n");
 				if (netbios_name_list && netbios_name_list[1])

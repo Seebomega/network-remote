@@ -347,7 +347,7 @@ function groupe_mac_on_ip(arp_table, callback)
 
 function get_dhcp_lease() {
 	var dhcp_lease = {};
-	if (fs.existsSync("/data/remote/dhcpd.leases/"))
+	if (fs.existsSync("/data/remote/dhcpd.leases"))
 	{
 		var dhcp_file = fs.readFileSync('dhcpd.leases', 'utf8');
 		var dhcp_lease_list = dhcp_file.match(/lease ([0-9.]+) {([A-z 0-9/:;.\n"\\'{?=-]+);\n  client-hostname "([A-z- 0-9]+)";\n}/g);

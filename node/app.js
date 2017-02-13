@@ -23,6 +23,8 @@ var arp_table = {};
 arp_table.name = options.hostname;
 var scan_iface;
 var token;
+var scan_date = {};
+
 arp_table.children = [];
 
 setTimeout(function(){ 
@@ -35,95 +37,120 @@ setTimeout(function(){
 }, 3000);
 
 function twoDigits(d) {
-    if(0 <= d && d < 10) return "0" + d.toString();
-    if(-10 < d && d < 0) return "-0" + (-1*d).toString();
-    return d.toString();
+	if(0 <= d && d < 10) return "0" + d.toString();
+	if(-10 < d && d < 0) return "-0" + (-1*d).toString();
+	return d.toString();
 }
 
 function toMysqlFormat(date) {
-    if(date != null){
-        return date.getUTCFullYear() + "-" + twoDigits(1 + date.getUTCMonth()) + "-" + twoDigits(date.getUTCDate()) + " " + twoDigits(date.getHours()) + ":" + twoDigits(date.getUTCMinutes()) + ":" + twoDigits(date.getUTCSeconds());
-    }
-    else{
-        return '';
-    }
+	if(date != null){
+		return date.getUTCFullYear() + "-" + twoDigits(1 + date.getUTCMonth()) + "-" + twoDigits(date.getUTCDate()) + " " + twoDigits(date.getHours()) + ":" + twoDigits(date.getUTCMinutes()) + ":" + twoDigits(date.getUTCSeconds());
+	}
+	else{
+		return '';
+	}
 };
 
+function toHHMMSS(time_stamp) {
+    var sec_num = parseInt(time_stamp, 10); // don't forget the second param
+    var hours   = Math.floor(sec_num / 3600);
+    var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+    var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+    if (hours   < 10) {hours   = "0"+hours;}
+    if (minutes < 10) {minutes = "0"+minutes;}
+    if (seconds < 10) {seconds = "0"+seconds;}
+	if(hours > 24){
+		var day = Math.floor(hours/24);
+		hours = hours%24;
+		 var time = day+' Jour(s) '+hours+':'+minutes+':'+seconds;
+	}
+	else{
+	    var time = hours+':'+minutes+':'+seconds;
+	}
+    return time;
+}
 
 function shutdown(signal, value) {
 	console.log('server stopped by ' + signal);
 	console.log('clean cookie: ' + token);
-	fs.unlinkSync("/data/remote/cookies/" + token);
+	if (fs.existsSync("/data/remote/cookies/" + token))
+		fs.unlinkSync("/data/remote/cookies/" + token);
 	process.exit(128 + value);
 }
 
 var signals = {
-    'SIGINT': 2,
-    'SIGTERM': 15
+	'SIGINT': 2,
+	'SIGTERM': 15
 };
 
 Object.keys(signals).forEach(function (signal) {
-    process.on(signal, function () {
-        shutdown(signal, signals[signal]);
-    });
+	process.on(signal, function () {
+		shutdown(signal, signals[signal]);
+	});
 });
 
 var socket;
 
 crypto.randomBytes(48, function(ex, buf) {
-    token = buf.toString('hex');
-    fs.writeFileSync(
-        "/data/remote/cookies/" + token,
-        JSON.stringify({
-            user: options.hostname,
-			type: "network-remote",
-            login : new Date()
-        })
-    );
-    init_socket_io(token);
+	token = buf.toString('hex');
+	if (fs.existsSync("/data/remote/cookies/"))
+	{
+		fs.writeFileSync(
+			"/data/remote/cookies/" + token,
+			JSON.stringify({
+				user: options.hostname,
+				type: "network-remote",
+				login : new Date()
+			})
+		);
+	}
+	else
+		console.log("Cookie not create, wrong path");
+	init_socket_io(token);
 });
 
 function init_socket_io(token) {
 
-    socket = io.connect(options.engine_ip, {
-        'port': options.dest_port,
-        'secure': true,
-        extraHeaders: {
-            'Cookie': "AUTH_COOKIE=" + token + ";"
-        }
-    });
+	socket = io.connect(options.engine_ip, {
+		'port': options.dest_port,
+		'secure': true,
+		extraHeaders: {
+			'Cookie': "AUTH_COOKIE=" + token + ";"
+		}
+	});
 
 	console.log("io connect " + options.engine_ip + " port " + options.dest_port);
 
-    socket.on('connect', function () {
-        var arp_login = {
-            hostname: arp_table.name,
-            type: "arp_client",
-            token: options.token
-        };
-        socket.emit("login", arp_login);
-        console.log("Login: ", arp_login);
-    });
+	socket.on('connect', function () {
+		var arp_login = {
+			hostname: arp_table.name,
+			type: "arp_client",
+			token: options.token
+		};
+		socket.emit("login", arp_login);
+		console.log("Login: ", arp_login);
+	});
 
-    socket.on('return_register', function (token) {
-        if (token.valid)
-        {
-            options.token = token.id;
-            fs.writeFileSync('options.json', JSON.stringify(options));
-            console.log("Registered on engine");
-        }
-        else
-        {
-            console.log("Wrong token");
-        }
-        shutdown('SIGTERM', -128);
-    });
+	socket.on('return_register', function (token) {
+		if (token.valid)
+		{
+			options.token = token.id;
+			fs.writeFileSync('options.json', JSON.stringify(options));
+			console.log("Registered on engine");
+		}
+		else
+		{
+			console.log("Wrong token");
+		}
+		shutdown('SIGTERM', -128);
+	});
 
-    if (process.argv.length >= 4 && process.argv[2] == "register")
-    {
-        socket.emit("register_scan_arp", process.argv[3]);
-        console.log("Register on engine");
-    }
+	if (process.argv.length >= 4 && process.argv[2] == "register")
+	{
+		socket.emit("register_scan_arp", process.argv[3]);
+		console.log("Register on engine");
+	}
 }
 
 function start_app()
@@ -169,6 +196,7 @@ function convert_netmask(full_mask)
 function make_cmd_arp(net_list, callback)
 {
 	list_cmd = [];
+	scan_date.start = new Date().getTime() / 1000;
 	for (var key in net_list)
 	{
 		if (net_list[key].ip_address && net_list[key].netmask)
@@ -242,8 +270,7 @@ function groupe_mac_on_ip(arp_table, callback)
 			var mac_find = true;
 			for (var key2 in iface.children)
 			{
-				if (iface.children[key2].mac == arp_table.children[key].children[key1].mac ||
-					iface.children[key2].ip == arp_table.children[key].children[key1].ip)
+				if (iface.children[key2].mac == arp_table.children[key].children[key1].mac)
 				{
 					mac_find = false;
 					iface.children[key2].mac.push(arp_table.children[key].children[key1].mac);
@@ -281,21 +308,56 @@ function groupe_mac_on_ip(arp_table, callback)
 		}
 		arp_table.children[key].children = iface.children;
 	}
-    var dhcp_lease = get_dhcp_lease();
+	for (var key in arp_table.children)
+	{
+		for (var key1 in arp_table.children[key].children)
+		{
+			var double_pos = [];
+			var double_mac = [];
+			for (var key2 in arp_table.children)
+			{
+				for (var key3 in arp_table.children[key2].children)
+				{
+					if (arp_table.children[key].children[key1].ip == arp_table.children[key2].children[key3].ip)
+					{
+						double_pos.push(key3);
+						double_mac.push(arp_table.children[key].children[key1].mac);
+					}
+				}
+			}
+			if (double_pos.length > 1)
+			{
+				for (var pos in double_pos)
+				{
+					for (var key2 in double_mac[pos])
+					{
+						arp_table.children[key].children[double_pos[pos]].mac.push(double_mac[pos][key2]);
+					}
+					arp_table.children[key].children[double_pos[pos]].mac = arp_table.children[key].children[double_pos[pos]].mac.filter(function(elem, index, self) {
+						return index == self.indexOf(elem);
+					});
+				}
+			}
+		}
+	}
+	var dhcp_lease = get_dhcp_lease();
 	var scan_date = toMysqlFormat(new Date());
 	get_host_name(0, 0, arp_table, dhcp_lease, scan_date, callback);
 }
 
 function get_dhcp_lease() {
-    var dhcp_file = fs.readFileSync('dhcpd.leases', 'utf8');
-    var dhcp_lease_list = dhcp_file.match(/lease ([0-9.]+) {([A-z 0-9/:;.\n"\\'{?=-]+);\n  client-hostname "([A-z- 0-9]+)";\n}/g);
-    var dhcp_lease = {};
-    for (var key in dhcp_lease_list)
+	var dhcp_lease = {};
+	if (fs.existsSync("/data/remote/dhcpd.leases/"))
 	{
-        var result = dhcp_lease_list[key].match(/lease ([0-9.]+) |client-hostname "([A-z- 0-9]+)";/g);
-		dhcp_lease[result[0].replace("lease ", "").replace(" ", "")] = result[1].replace("client-hostname \"", "").replace("\";", "");
+		var dhcp_file = fs.readFileSync('dhcpd.leases', 'utf8');
+		var dhcp_lease_list = dhcp_file.match(/lease ([0-9.]+) {([A-z 0-9/:;.\n"\\'{?=-]+);\n  client-hostname "([A-z- 0-9]+)";\n}/g);
+		for (var key in dhcp_lease_list)
+		{
+			var result = dhcp_lease_list[key].match(/lease ([0-9.]+) |client-hostname "([A-z- 0-9]+)";/g);
+			dhcp_lease[result[0].replace("lease ", "").replace(" ", "")] = result[1].replace("client-hostname \"", "").replace("\";", "");
+		}
 	}
-    return (dhcp_lease);
+	return (dhcp_lease);
 }
 
 function get_host_name(p_iface, p_host, arp_table, dhcp_lease, scan_date, callback)
@@ -303,29 +365,35 @@ function get_host_name(p_iface, p_host, arp_table, dhcp_lease, scan_date, callba
 	if (arp_table.children[p_iface].children[p_host])
 	{
 		var command = "host " + arp_table.children[p_iface].children[p_host].ip;
-        arp_table.children[p_iface].children[p_host].date = scan_date;
+		arp_table.children[p_iface].children[p_host].date = scan_date;
 		exec(command, function(error_exec, stdout, stderr) {
 			var tab_dns_name = stdout.match(/domain name pointer ([0-z.-])+/g);
-            command = "timeout 0.1 nmblookup -A " + arp_table.children[p_iface].children[p_host].ip;
-            exec(command, function(error_exec1, stdout1, stderr1) {
-                var netbios_name_list = stdout1.split("\n");
-                if (netbios_name_list && netbios_name_list[1])
-                {
-                    var netbios_name = netbios_name_list[1].split(" ").join("").split("<");
-                    arp_table.children[p_iface].children[p_host].netbios = netbios_name[0].substr(1, netbios_name[0].length);
-                    arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].netbios + "";
-                }
-                if (dhcp_lease[arp_table.children[p_iface].children[p_host].ip])
+			command = "timeout 0.1 nmblookup -A " + arp_table.children[p_iface].children[p_host].ip;
+			exec(command, function(error_exec1, stdout1, stderr1) {
+				var netbios_name_list = stdout1.split("\n");
+				if (netbios_name_list && netbios_name_list[1])
 				{
-                    arp_table.children[p_iface].children[p_host].hostname = dhcp_lease[arp_table.children[p_iface].children[p_host].ip];
-                    arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].hostname + "";
-                    console.log(arp_table.children[p_iface].children[p_host].hostname, arp_table.children[p_iface].children[p_host].ip);
+					var netbios_name = netbios_name_list[1].split(" ").join("").split("<");
+					arp_table.children[p_iface].children[p_host].netbios = netbios_name[0].substr(1, netbios_name[0].length);
+					arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].netbios + "";
 				}
-                if (tab_dns_name && tab_dns_name[0])
+				if (dhcp_lease[arp_table.children[p_iface].children[p_host].ip])
 				{
-                    arp_table.children[p_iface].children[p_host].dns_name = tab_dns_name[0].replace("domain name pointer ", "");
-					arp_table.children[p_iface].children[p_host].name = dns_name + "";
+					arp_table.children[p_iface].children[p_host].hostname = dhcp_lease[arp_table.children[p_iface].children[p_host].ip];
+					arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].hostname + "";
+					console.log(arp_table.children[p_iface].children[p_host].hostname, arp_table.children[p_iface].children[p_host].ip);
 				}
+				if (tab_dns_name && tab_dns_name[0])
+				{
+					arp_table.children[p_iface].children[p_host].dns_name = tab_dns_name[0].replace("domain name pointer ", "");
+					arp_table.children[p_iface].children[p_host].name = arp_table.children[p_iface].children[p_host].dns_name + "";
+				}
+				/*console.log(
+					arp_table.children[p_iface].children[p_host].ip,
+					arp_table.children[p_iface].children[p_host].dns_name,
+					arp_table.children[p_iface].children[p_host].hostname,
+					arp_table.children[p_iface].children[p_host].netbios);
+				*/
 				p_host++;
 				if (arp_table.children[p_iface].children[p_host])
 				{
@@ -340,7 +408,7 @@ function get_host_name(p_iface, p_host, arp_table, dhcp_lease, scan_date, callba
 					else
 						callback(arp_table);
 				}
-            });
+			});
 		});
 	}
 }
@@ -348,6 +416,8 @@ function get_host_name(p_iface, p_host, arp_table, dhcp_lease, scan_date, callba
 
 function send_data_to_engine(data)
 {
+	scan_date.end = new Date().getTime() / 1000;
+	data.time = toHHMMSS(scan_date.end - scan_date.start);
 	socket.emit("scan_arp", data);
 	console.log("Send arp_data");
 	delete arp_table.children;

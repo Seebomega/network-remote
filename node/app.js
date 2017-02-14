@@ -376,7 +376,6 @@ function groupe_mac_on_ip(arp_table, callback)
 	}
 	var dhcp_lease = get_dhcp_lease();
 	var now = (new Date()).getTime() + (60*60*1000);
-	console.log(now);
 	var scan_date = toMysqlFormat(new Date(now));
 	get_host_name(0, 0, arp_table, dhcp_lease, scan_date, callback);
 }
@@ -386,7 +385,7 @@ function get_dhcp_lease() {
 	if (fs.existsSync("/data/remote/dhcpd.leases"))
 	{
 		var dhcp_file = fs.readFileSync('dhcpd.leases', 'utf8');
-		var dhcp_lease_list = dhcp_file.match(/lease ([0-9.]+) {([A-z 0-9/:;.\n"\\'(),{?=-]+);\n  client-hostname "([A-z- 0-9]+)";\n}/g);
+		var dhcp_lease_list = dhcp_file.match(/lease ([0-9.]+) {([A-z 0-9/:;.\n"\\'(),${?=-]+);\n  client-hostname "([A-z- 0-9]+)";\n}/g);
 		for (var key in dhcp_lease_list)
 		{
 			var result = dhcp_lease_list[key].match(/lease ([0-9.]+) |client-hostname "([A-z- 0-9]+)";/g);

@@ -280,6 +280,7 @@ function groupe_mac_on_ip(arp_table, callback)
 			{
 				var new_host = {};
 				new_host.ip = arp_table.children[key].children[key1].ip;
+				new_host.vendor = arp_table.children[key].children[key1].vendor;
 				new_host.name = arp_table.children[key].children[key1].ip
 				new_host.mac = [];
 				new_host.docker = false;

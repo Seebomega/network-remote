@@ -9,7 +9,7 @@
 //    Updated: 2017/02/08 15:29:23 by gtorresa         ###   ########.fr        //
 //                                                                              //
 //******************************************************************************//
-//egrep "host|hardware ethernet|fixed-address|    \}" /etc/dhcp/dhcpd.conf | sed '/^#/ d' | sed 's/\<host\>//g' | tr -d " "
+
 var fs = require('fs');
 var io = require('socket.io-client');
 var crypto = require('crypto');
@@ -350,11 +350,21 @@ function get_dhcp_lease() {
 	if (fs.existsSync("/data/remote/dhcpd.leases"))
 	{
 		var dhcp_file = fs.readFileSync('dhcpd.leases', 'utf8');
-		var dhcp_lease_list = dhcp_file.match(/lease ([0-9.]+) {([A-z 0-9/:;.\n"\\'$(),{?=-]+);\n  client-hostname "([A-z- 0-9]+)";\n}/g);
+		var dhcp_lease_list = dhcp_file.match(/lease ([0-9.]+) {([A-z 0-9/:;.\n"\\'(),{?=-]+);\n  client-hostname "([A-z- 0-9]+)";\n}/g);
 		for (var key in dhcp_lease_list)
 		{
 			var result = dhcp_lease_list[key].match(/lease ([0-9.]+) |client-hostname "([A-z- 0-9]+)";/g);
 			dhcp_lease[result[0].replace("lease ", "").replace(" ", "")] = result[1].replace("client-hostname \"", "").replace("\";", "");
+		}
+	}
+	if (fs.existsSync("/data/remote/dhcpd.conf"))
+	{
+		var dhcpfix_file = fs.readFileSync("dhcpd.conf", 'utf8');
+		var dhcpfix_lease_list = dhcpfix_file.match(/host ([A-z- 0-9])+{([A-z\n. 0-9:;-])+}/g);
+		for (var key in dhcpfix_lease_list)
+		{
+			var result = dhcpfix_lease_list[key].replace(/host|([{;} ])+|hardware ethernet|fixed-address/g, "").split("\n");
+			dhcp_lease[result[2]] = result[0];
 		}
 	}
 	return (dhcp_lease);
@@ -368,7 +378,7 @@ function get_host_name(p_iface, p_host, arp_table, dhcp_lease, scan_date, callba
 		arp_table.children[p_iface].children[p_host].date = scan_date;
 		exec(command, function(error_exec, stdout, stderr) {
 			var tab_dns_name = stdout.match(/domain name pointer ([0-z.-])+/g);
-			command = "timeout 0.3 nmblookup -A " + arp_table.children[p_iface].children[p_host].ip;
+			command = "timeout 0.1 nmblookup -A " + arp_table.children[p_iface].children[p_host].ip;
 			exec(command, function(error_exec1, stdout1, stderr1) {
 				var netbios_name_list = stdout1.split("\n");
 				if (netbios_name_list && netbios_name_list[1])
@@ -418,14 +428,12 @@ function send_data_to_engine(data)
 		{
 			if (data.children[key].name == scan_iface[key1].name)
 			{
-				console.log(scan_iface[key1]);
 				data.children[key].type = scan_iface[key1].type;
 				data.children[key].ip_address = scan_iface[key1].ip_address;
 				data.children[key].gateway_ip = scan_iface[key1].gateway_ip;
 				data.children[key].netmask = scan_iface[key1].netmask;
 			}
 		}
-		console.log(data.children[key].name);
 	}
 	socket.emit("scan_arp", data);
 	console.log("Send arp_data");

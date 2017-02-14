@@ -76,6 +76,8 @@ function shutdown(signal, value) {
 	console.log('clean cookie: ' + token);
 	if (fs.existsSync("/data/remote/cookies/" + token))
 		fs.unlinkSync("/data/remote/cookies/" + token);
+	if (fs.existsSync('options.json'))
+		fs.writeFileSync('options.json', JSON.stringify(options));
 	process.exit(128 + value);
 }
 
@@ -164,10 +166,41 @@ function start_app()
 		}
 		else
 		{
-			scan_iface = obj;
-			make_cmd_arp(obj, send_data_to_engine)
+			scan_iface = get_selected_iface(obj);
+			make_cmd_arp(scan_iface, send_data_to_engine)
 		}
 	});
+}
+
+function get_selected_iface(obj)
+{
+	if (options.iface)
+	{
+		console.log(options.iface);
+		for (var key in obj)
+		{
+			var scan_iface = false;
+			for (var key2 in options.iface)
+			{
+				if (options.iface[key2] == obj[key].name)
+				{
+					scan_iface = true;
+				}
+			}
+			if (!scan_iface)
+				delete obj[key];
+		}
+	}
+	else
+	{
+		options.iface = [];
+		for (var key in obj)
+		{
+			if (obj[key].ip_address && obj[key].netmask)
+				options.iface.push(obj[key].name);
+		}
+	}
+	return (obj);
 }
 
 function convert_digit(mask)

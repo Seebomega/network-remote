@@ -342,7 +342,9 @@ function groupe_mac_on_ip(arp_table, callback)
 		}
 	}
 	var dhcp_lease = get_dhcp_lease();
-	var scan_date = toMysqlFormat(new Date());
+	var now = (new Date()).getTime() + (60*60*1000);
+	console.log(now);
+	var scan_date = toMysqlFormat(new Date(now));
 	get_host_name(0, 0, arp_table, dhcp_lease, scan_date, callback);
 }
 
@@ -382,7 +384,7 @@ function get_host_name(p_iface, p_host, arp_table, dhcp_lease, scan_date, callba
 			command = "timeout 0.1 nmblookup -A " + arp_table.children[p_iface].children[p_host].ip;
 			exec(command, function(error_exec1, stdout1, stderr1) {
 				var netbios_name_list = stdout1.split("\n");
-				if (netbios_name_list && netbios_name_list[1])
+				if (netbios_name_list && netbios_name_list[1] && netbios_name_list.length > 4)
 				{
 					var netbios_name = netbios_name_list[1].split(" ").join("").split("<");
 					arp_table.children[p_iface].children[p_host].netbios = netbios_name[0].substr(1, netbios_name[0].length);

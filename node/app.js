@@ -76,7 +76,7 @@ function shutdown(signal, value) {
 	console.log('clean cookie: ' + token);
 	if (fs.existsSync("/data/remote/cookies/" + token))
 		fs.unlinkSync("/data/remote/cookies/" + token);
-	if (fs.existsSync('options.json'))
+	if (fs.existsSync('options.json') && signal != "SIGINT")
 		fs.writeFileSync('options.json', JSON.stringify(options));
 	process.exit(128 + value);
 }
@@ -145,7 +145,11 @@ function init_socket_io(token) {
 		{
 			console.log("Wrong token");
 		}
-		shutdown('SIGTERM', -128);
+        if (fs.existsSync('options.json'))
+            fs.writeFileSync('options.json', JSON.stringify(options));
+		exec("kill -INT 1", function(error, stdout, stderr) {
+			shutdown("SIGTERM", -128);
+		});
 	});
 
 	if (process.argv.length >= 4 && process.argv[2] == "register")
@@ -361,16 +365,16 @@ function groupe_mac_on_ip(arp_table, callback)
 			}
 			if (double_pos.length > 1)
 			{
-				for (var pos in double_pos)
-				{
-					for (var key2 in double_mac[pos])
-					{
-						if (arp_table.children[key].children[double_pos[pos]])
-							arp_table.children[key].children[double_pos[pos]].mac.push(double_mac[pos][key2]);
-					}
-					arp_table.children[key].children[double_pos[pos]].mac = arp_table.children[key].children[double_pos[pos]].mac.filter(function(elem, index, self) {
-						return index == self.indexOf(elem);
-					});
+				for (var pos in double_pos) {
+                    for (var key2 in double_mac[pos]) {
+                        if (arp_table.children[key].children[double_pos[pos]])
+                            arp_table.children[key].children[double_pos[pos]].mac.push(double_mac[pos][key2]);
+                    }
+                    if (arp_table.children[key].children[double_pos[pos]]){
+                        arp_table.children[key].children[double_pos[pos]].mac = arp_table.children[key].children[double_pos[pos]].mac.filter(function (elem, index, self) {
+                            return index == self.indexOf(elem);
+                        });
+                	}
 				}
 			}
 		}

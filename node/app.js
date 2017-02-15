@@ -17,8 +17,9 @@ var exec = require('child_process').exec;
 var network = require('network');
 var Netmask = require('netmask').Netmask;
 
-var options = JSON.parse(fs.readFileSync('options.json') || '{}');
-
+var path_option = '/data/remote/options/options.json';
+var options;
+read_option(path_option);
 var arp_table = {};
 arp_table.name = options.hostname;
 var scan_iface;
@@ -49,7 +50,7 @@ function toMysqlFormat(date) {
 	else{
 		return '';
 	}
-};
+}
 
 function toHHMMSS(time_stamp) {
     var sec_num = parseInt(time_stamp, 10); // don't forget the second param
@@ -71,13 +72,44 @@ function toHHMMSS(time_stamp) {
     return time;
 }
 
+function makeid()
+{
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    for( var i=0; i < 18; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}
+
+function read_option(path) {
+	if (fs.existsSync(path))
+        options = JSON.parse(fs.readFileSync(path));
+    else
+	{
+        options = {
+        	hostname: makeid(),
+			type: 'arp_client',
+			token: makeid(),
+            engine_ip: "http://localhost",
+			dest_port: 80
+        };
+        fs.writeFileSync(path, JSON.stringify(options));
+	}
+    connection_io();
+}
+
 function shutdown(signal, value) {
-	console.log('server stopped by ' + signal);
-	console.log('clean cookie: ' + token);
+	console.log('stopped by ' + signal);
+
 	if (fs.existsSync("/data/remote/cookies/" + token))
-		fs.unlinkSync("/data/remote/cookies/" + token);
-	if (fs.existsSync('options.json') && signal != "SIGINT")
-		fs.writeFileSync('options.json', JSON.stringify(options));
+	{
+        console.log('clean cookie: ' + token);
+        fs.unlinkSync("/data/remote/cookies/" + token);
+	}
+	if (fs.existsSync(path_option) && signal != "SIGINT")
+		fs.writeFileSync(path_option, JSON.stringify(options));
 	process.exit(128 + value);
 }
 
@@ -94,23 +126,25 @@ Object.keys(signals).forEach(function (signal) {
 
 var socket;
 
-crypto.randomBytes(48, function(ex, buf) {
-	token = buf.toString('hex');
-	if (fs.existsSync("/data/remote/cookies/"))
-	{
-		fs.writeFileSync(
-			"/data/remote/cookies/" + token,
-			JSON.stringify({
-				user: options.hostname,
-				type: "network-remote",
-				login : new Date()
-			})
-		);
-	}
-	else
-		console.log("Cookie not create, wrong path");
-	init_socket_io(token);
-});
+function connection_io() {
+    crypto.randomBytes(48, function(ex, buf) {
+        token = buf.toString('hex');
+        if (fs.existsSync("/data/remote/cookies/"))
+        {
+            fs.writeFileSync(
+                "/data/remote/cookies/" + token,
+                JSON.stringify({
+                    user: options.hostname,
+                    type: "network-remote",
+                    login : new Date()
+                })
+            );
+        }
+        else
+            console.log("Cookie not create, wrong path");
+        init_socket_io(token);
+    });
+}
 
 function init_socket_io(token) {
 
@@ -138,18 +172,19 @@ function init_socket_io(token) {
 		if (token.valid)
 		{
 			options.token = token.id;
-			fs.writeFileSync('options.json', JSON.stringify(options));
+			fs.writeFileSync(path_option, JSON.stringify(options));
 			console.log("Registered on engine");
+            if (fs.existsSync(path_option))
+                fs.writeFileSync(path_option, JSON.stringify(options));
+            exec("kill -INT 1", function(error, stdout, stderr) {
+                shutdown("SIGTERM", -128);
+            });
 		}
 		else
 		{
 			console.log("Wrong token");
+            shutdown("SIGTERM", -128);
 		}
-        if (fs.existsSync('options.json'))
-            fs.writeFileSync('options.json', JSON.stringify(options));
-		exec("kill -INT 1", function(error, stdout, stderr) {
-			shutdown("SIGTERM", -128);
-		});
 	});
 
 	if (process.argv.length >= 4 && process.argv[2] == "register")

@@ -365,7 +365,8 @@ function groupe_mac_on_ip(arp_table, callback)
 				{
 					for (var key2 in double_mac[pos])
 					{
-						arp_table.children[key].children[double_pos[pos]].mac.push(double_mac[pos][key2]);
+						if (arp_table.children[key].children[double_pos[pos]])
+							arp_table.children[key].children[double_pos[pos]].mac.push(double_mac[pos][key2]);
 					}
 					arp_table.children[key].children[double_pos[pos]].mac = arp_table.children[key].children[double_pos[pos]].mac.filter(function(elem, index, self) {
 						return index == self.indexOf(elem);

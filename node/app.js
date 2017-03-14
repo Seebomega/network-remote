@@ -365,7 +365,7 @@ function groupe_mac_on_ip(arp_table, callback)
 			var counts = [];
 			var duplicated = false;
 			for(var i = 0; i <= iface.children[key1].mac.length; i++) {
-				if(counts[iface.children[key1].mac[i]] === undefined) {
+				if(iface.children[key1].mac.length > 0 && counts[iface.children[key1].mac[i]] === undefined) {
 					counts[iface.children[key1].mac[i]] = 1;
 				} else {
 					duplicated = true;

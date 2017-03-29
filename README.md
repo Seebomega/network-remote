@@ -6,10 +6,10 @@ Network-Remote is a container that you summon with access to the subnet(s) that 
 
 The container can only (_AND ONLY_) send an `arp -scan` on his subnet(s) and ask for more informations to isc-dhcp-server or DNS server (With configuration).
 
-The app see if hosts are Connected, IP conflicts, DNS names, HostNames, IP, mac, DockerRunning ... and send them to the Engine (http://link)
+The app see if hosts are Connected, IP conflicts, DNS names, HostNames, IP, mac, DockerRunning ... and send them to the Engine (https://github.com/Seebomega/network-engine)
 
 ![example image][logo]
-*This visualization is rendered by the Engine (http://link)*
+*This visualization is rendered by the Engine (https://github.com/Seebomega/network-engine)*
 
 ## How it works
 
@@ -36,7 +36,7 @@ For example : `node/options.json` *Set hostname, Engine's IP and port*
 
 Exec: `docker-compose up`
 
-Exec: `docker exec -ti network-remote register $MASTERTOKEN` << Get the master Token from Engine's `options.json` see (http://link)
+Exec: `docker exec -ti network-remote register $MASTERTOKEN` << Get the master Token from Engine's `options.json` see (https://github.com/Seebomega/network-engine)
 
 Now you have the nodes who appears in the Engine's web page
 

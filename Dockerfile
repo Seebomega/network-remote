@@ -13,18 +13,15 @@ RUN apt-get update && \
 	arp-scan && \
 	apt-get clean
 
-RUN mkdir -p /data/remote && \
-	useradd -u 1000 -s /bin/bash -d /data/remote remote
-
-RUN echo "remote ALL= NOPASSWD: /usr/bin/arp-scan" | cat >> /etc/sudoers
-
-RUN echo "remote ALL= NOPASSWD: /sbin/ip" | cat >> /etc/sudoers
-
-RUN ln -s /usr/bin/nodejs /usr/bin/node && ln -s /data/remote/register /usr/bin/register
-
 ADD ./node /data/remote
 
-RUN chown -R remote:remote /data/remote
+RUN mkdir -p /data/remote/options && \
+	useradd -u 1000 -s /bin/bash -d /data/remote remote && \
+    echo "remote ALL= NOPASSWD: /usr/bin/arp-scan" | cat >> /etc/sudoers && \
+    echo "remote ALL= NOPASSWD: /sbin/ip" | cat >> /etc/sudoers && \
+    ln -s /usr/bin/nodejs /usr/bin/node && \
+    ln -s /data/remote/register /usr/bin/register && \
+    chown -R remote:remote /data/remote
 
 USER remote
 

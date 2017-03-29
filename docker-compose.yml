@@ -8,5 +8,5 @@ services:
     restart: always
     network_mode: "host"
     volumes:
-      - "./node/options.json:/data/remote/options.json"
+      - "./node/options:/data/remote/options:rw"
       - "/nfs/docker/nginx-proxy/nginx/cookies:/data/remote/cookies:rw"

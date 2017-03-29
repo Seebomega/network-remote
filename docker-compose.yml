@@ -3,10 +3,11 @@ version: "2"
 services:
   network-remote:
     image: gitlab.onlineterroir.com:5001/pitzzae/network-remote
-#    image: network-remote
     container_name: network-remote
     restart: always
     network_mode: "host"
     volumes:
       - "./node/options:/data/remote/options:rw"
       - "/nfs/docker/nginx-proxy/nginx/cookies:/data/remote/cookies:rw"
+      - "/var/lib/dhcp/dhcpd.leases:/data/remote/dhcpd.leases:ro"
+      - "/etc/dhcp/dhcpd.conf:/data/remote/dhcpd.conf:ro"

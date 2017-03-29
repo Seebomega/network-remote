@@ -1,6 +1,6 @@
 [logo]: http://img15.hostingpics.net/pics/344966example.png "example"
 
-##Features: 
+## Features: 
 
 * Alpine base image
 * Aliases

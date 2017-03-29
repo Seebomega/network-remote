@@ -49,6 +49,7 @@ By default it's google's DNS, but you can customize your `docker-compose.yml` fi
 - Using isc-dhcp-server
 
 Mount the `dhcpd.conf` file (on server: `/etc/dhcpd/dhcpd.conf`) as volume `/your/path:/remote/data/dhcpd.conf`
+Mount the `dhcpd.leases` file (on server: `/etc/dhcpd/dhcpd.leases`) as volume `/your/path:/remote/data/dhcpd.leases`
 
 
 ## Motivation

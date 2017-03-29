@@ -177,7 +177,6 @@ function make_cmd_arp(net_list, callback)
 function scan_arp_network(pos, list_cmd, length, callback)
 {
 	var command = "sudo arp-scan -I " + list_cmd[pos].iface + " " + list_cmd[pos].base + "/" + list_cmd[pos].di_sub + " 172.17.0.1/32";
-	console.log(command);
 	exec(command, function(error_exec, stdout, stderr) {
 		if (error_exec) {
 			console.log("Error: ", error_exec);

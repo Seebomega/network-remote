@@ -83,20 +83,29 @@ function makeid()
     return text;
 }
 
+function write_option(path){
+    options = {
+        hostname: makeid(),
+        type: 'arp_client',
+        token: makeid(),
+        engine_ip: "http://localhost",
+        dest_port: 80
+    };
+
+    fs.writeFileSync(path, JSON.stringify(options));
+}
+
 function read_option(path) {
 	if (fs.existsSync(path))
         options = JSON.parse(fs.readFileSync(path));
+		if(Object.keys(options).length === 0 && options.constructor === Object){
+            write_option(path);
+		}
     else
 	{
-        options = {
-        	hostname: makeid(),
-			type: 'arp_client',
-			token: makeid(),
-            engine_ip: "http://localhost",
-			dest_port: 80
-        };
-        fs.writeFileSync(path, JSON.stringify(options));
+        write_option(path);
 	}
+
     connection_io();
 }
 

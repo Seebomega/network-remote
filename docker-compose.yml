@@ -7,6 +7,6 @@ services:
     restart: always
     network_mode: "host"
     volumes:
-      - "./node/options/options.json:/data/remote/options/options.json:rw"
+      - "./node/options:/data/remote/options:rw"
 #      - "/var/lib/dhcp/dhcpd.leases:/data/remote/dhcpd.leases:ro"
 #      - "/etc/dhcp/dhcpd.conf:/data/remote/dhcpd.conf:ro"

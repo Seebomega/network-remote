@@ -1,5 +1,11 @@
 [logo]: http://img15.hostingpics.net/pics/344966example.png "example"
 
+##Features: 
+
+* Alpine base image
+* Aliases
+* Tests
+
 ## Synopsis
 
 Network-Remote is a container that you summon with access to the subnet(s) that you want to scan.

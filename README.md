@@ -26,7 +26,7 @@ Engine aggregates datas from remote(s) and keep a cache json of all machines fou
 
 ## Installation
 
-Pull the project.
+Pull the project. `git clone https://github.com/Seebomega/network-remote.git`
 
 Exec: `docker build -t network-remote .`
 
